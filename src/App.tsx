@@ -1,28 +1,81 @@
-import React, { Component } from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React from 'react';
+import { connect } from 'react-redux';
+import { IRootState } from '.';
+import './App.scss';
+import { GetUsersRequest, AddUserRequest, RemoveUserRequest } from './store/actions/users.actions';
+import { IUser } from './store/models/users.models';
 
-class App extends Component {
+class App extends React.Component<any, any> {
+  constructor(props: any) {
+    super(props);
+
+    this.state = {
+      user: {
+        name: ''
+      }
+    };
+  }
+
+  componentDidMount() {
+    this.props.getUsers();
+  }
+
+  handleAddUser(user: IUser) {
+    this.props.addUser(user);
+    this.setState({ user: { name: '' } });
+  }
+  
+  handleRemoveUser(userId: string) {
+    this.props.removeUser(userId);
+  } 
+
+  handleUserName(event: any) {
+    this.setState({ user: { name: event.target.value } });
+  }
+
   render() {
+    const { users } = this.props;
     return (
-      <div className="App">
-        <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <p>
-            Edit <code>src/App.tsx</code> and save to reload.
-          </p>
-          <a
-            className="App-link"
-            href="https://reactjs.org"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Learn React
-          </a>
-        </header>
+      <div>
+        <div>
+          <input
+            placeholder="name"
+            value={this.state.user.name}
+            onChange={() => this.handleUserName(event)}
+          />
+        </div>
+        <div>
+          <button onClick={() => this.handleAddUser(this.state.user)}>
+            Add
+          </button>
+        </div>
+        <ul>
+          {users.map((user: IUser) => (
+            <li value={user.name} key={user.name}>
+              {user.name} <span className="remove_me" onClick={() => this.handleRemoveUser(user._id)}>REMOVE ME</span>
+            </li>
+          ))}
+        </ul>
       </div>
     );
   }
 }
 
-export default App;
+const mapStateToProps = (state: IRootState) => {
+  return {
+    users: state.userModule.users
+  };
+};
+
+const mapActionsToProps = (dispatch: any) => {
+  return {
+    getUsers: () => dispatch(GetUsersRequest()),
+    addUser: (user: IUser) => dispatch(AddUserRequest(user)),
+    removeUser: (userId: string) => dispatch(RemoveUserRequest(userId))
+  };
+};
+
+export default connect(
+  mapStateToProps,
+  mapActionsToProps
+)(App);
